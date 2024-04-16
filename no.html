@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2D World Exploration Game</title>
+<style>
+    body {
+        margin: 0;
+        overflow: hidden;
+    }
+    canvas {
+        background-color: pink;
+        display: block;
+        margin: auto;
+    }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const gridSize = 50;
+    let playerX, playerY;
+    let worldWidth, worldHeight;
+    let targetX, targetY;
+    var speed1 = (window.innerWidth + window.innerHeight) / 2 / 1100;
+    const speed = 0.1;
+	var worldState = 0;
+    var numHearts = 3;
+    var telecounter = -3000;
+    var teleanim = 0;
+    let maze = [
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1],
+        [1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+        [1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+        [1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1],
+        [1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+        [1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1],
+        [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1],
+        [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1],
+        [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1],
+        [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1],
+        [1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1],
+        [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1],
+        [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 3, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        ];
+    let maze_pos = [1,1];
+	const world_clears = [0,0,0];
+    let choice = "c0";
+    // Load player images
+    const playerImages = {
+        standing: new Image(),
+        movingLeft: new Image(),
+        movingRight: new Image(),
+        movingUp: new Image(),
+        movingDown: new Image()
+    };
+
+    playerImages.standing.src = 'player_standing_right.png';
+    playerImages.movingLeft.src = 'player_moving_left.png';
+    playerImages.movingRight.src = 'player_moving_right.png';
+    playerImages.movingUp.src = 'player_moving_up.png';
+    playerImages.movingDown.src = 'player_moving_down.png';
+
+    let currentAnimation = 'standing';
+
+    const telepodImage = new Image();
+    telepodImage.src = 'telepod.png';
+
+    const telepodImage2 = new Image();
+    telepodImage2.src = 'telepod2.png';
+
+    const telepodClearedImage = new Image();
+    telepodClearedImage.src = 'telepodCleared.png';
+
+    const telepodClearedImage2 = new Image();
+    telepodClearedImage2.src = 'telepodCleared2.png';
+
+    const questionImage = new Image();
+    questionImage.src = 'question.png';
+	
+    const heartImage = new Image();
+    heartImage.src = 'kisspng-love-heart-love-heart-romance-clip-art-picture-of-red-heart-5aaeb718420cb8.8640685015213995762706.png';
+
+    const mazeWallImage = new Image();
+    mazeWallImage.src = 'maze_wall.png';
+
+    const mazeEndImage = new Image();
+    mazeEndImage.src = 'maze_end.png';
+
+    const mazeOpenImage = new Image();
+    mazeOpenImage.src = 'maze_open.png';
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        worldWidth = Math.floor(canvas.width / gridSize);
+        worldHeight = Math.floor(canvas.height / gridSize);
+        playerX = Math.floor(worldWidth / 2);
+        playerY = Math.floor(worldHeight / 2);
+        targetX = playerX;
+        targetY = playerY;
+
+    }
+
+    function drawPlayer() {
+        // Draw player image based on current animation
+        ctx.drawImage(playerImages[currentAnimation], playerX * gridSize, playerY * gridSize, gridSize, gridSize);
+        // console.log("Current Animation:", currentAnimation); // Print current animation to console
+
+    }
+
+    function drawTelepods() {
+        // Draw teleportation platforms
+        const telepodWidth = 50; // Adjust size if needed
+        const telepodHeight = 50; // Adjust size if needed
+        const numTelepods = 3;
+        const telepodSpacing = canvas.width / (numTelepods + 1);
+        telecounter += 1;
+        if(telecounter % 50 == 0) {
+            teleanim++;
+        }
+
+        for (let i = 1; i <= numTelepods; i++) {
+            if(teleanim % 2 == 0) {
+                if(world_clears[i-1] > 0) {
+                    ctx.drawImage(telepodClearedImage, i * telepodSpacing - telepodWidth / 2, canvas.height - telepodHeight, telepodWidth, telepodHeight);
+                } else {
+                    ctx.drawImage(telepodImage, i * telepodSpacing - telepodWidth / 2, canvas.height - telepodHeight, telepodWidth, telepodHeight);
+                }
+            } else {
+                if(world_clears[i-1] > 0) {
+                    ctx.drawImage(telepodClearedImage2, i * telepodSpacing - telepodWidth / 2, canvas.height - telepodHeight, telepodWidth, telepodHeight);
+                } else {
+                    ctx.drawImage(telepodImage2, i * telepodSpacing - telepodWidth / 2, canvas.height - telepodHeight, telepodWidth, telepodHeight);
+                }
+            }
+        }
+    }
+
+    function drawQuestions() {
+        // Draw teleportation platforms
+        const qWidth = 600; // Adjust size if needed
+        const qHeight = 400; // Adjust size if needed
+        ctx.drawImage(questionImage, canvas.width/2 - qWidth / 2, qHeight/4, qWidth, qHeight);
+        // console.log("question x: " + (canvas.width/2 - qWidth / 2) + "question y:" + qHeight/4);
+
+        const heartWidth = 50; // Adjust size if needed
+        const heartHeight = 50; // Adjust size if needed
+        const heartSpacing = canvas.width /4/ (numHearts + 1);
+
+        for (let i = -1; i <= numHearts-2; i++) {
+            ctx.drawImage(heartImage, canvas.width/2 + i * heartSpacing - heartWidth / 2, qHeight/4+qHeight +30, heartWidth, heartHeight);
+        }
+    }
+    
+    function drawMaze() {
+
+        for(var i = 0; i < 26; i++) {
+            for(var z = 0; z < 26; z++) {
+                if(maze[z][i] == 1) ctx.drawImage(mazeWallImage, canvas.width/2 - 780 / 2 + i * 30, 100 + z * 30, 30, 30);
+                if(maze[z][i] == 0) ctx.drawImage(mazeOpenImage, canvas.width/2 - 780 / 2 + i * 30, 100 + z * 30, 30, 30);
+                if(maze[z][i] == 3) ctx.drawImage(mazeEndImage, canvas.width/2 - 780 / 2 + i * 30, 100 + z * 30, 30, 30);
+                if(z == maze_pos[1] && i == maze_pos[0]) {
+                    ctx.drawImage(mazeEndImage, canvas.width/2 - 780 / 2 + i * 30, 100 + z * 30, 30, 30);
+                    targetX = (canvas.width/2 - 780 / 2 + i * 30-10)/gridSize;
+                    targetY = (100 + z * 30-8)/gridSize;
+                }
+            }
+        }
+    }
+
+    function mazeMove(direction) {
+        console.log(direction);
+        console.log(maze_pos[0] + " " + maze_pos[1]);
+        // console.log(maze_pos[1]);
+        console.log("maze pos" + maze[maze_pos[0]][maze_pos[1]-1]);
+
+        switch (direction) {
+            case 'up':
+                if (maze_pos[1] > 0 && maze[maze_pos[1] - 1][maze_pos[0]] == 0) {
+                    maze_pos[1]--;
+                }
+                break;
+            case 'down':
+                if (maze_pos[1] < 25 && maze[maze_pos[1] + 1][maze_pos[0]] == 0) {
+                    maze_pos[1]++;
+                }
+                break;
+            case 'left':
+                if (maze_pos[0] > 0 && maze[maze_pos[1]][maze_pos[0] - 1] == 0) {
+                    maze_pos[0]--;
+                }
+                break;
+            case 'right':
+                if (maze_pos[0] < 25 && (maze[maze_pos[1]][maze_pos[0] + 1] == 0 || maze[maze_pos[1]][maze_pos[0] + 1] == 3)) {
+                    maze_pos[0]++;
+                }
+                break;
+        }
+        if(maze_pos[0] >= 24 && maze_pos[1] >= 24) {
+            worldState = 0;
+            console.log("check" + worldState);
+            world_clears[1] += 1;
+            alert("world 2 cleared YAHOOO");
+            playerX = Math.floor(worldWidth / 2);
+            playerY = Math.floor(worldHeight / 2);
+            targetX = Math.floor(worldWidth / 2);
+            targetY = Math.floor(worldHeight / 2);
+        }
+
+    }
+
+    function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function movePlayer(direction, p_x, p_y) {
+        switch (direction) {
+            case 'up':
+                if (playerY > 0) {
+                    targetY = playerY - speed1;
+                    currentAnimation = 'movingUp';
+                }
+                break;
+            case 'down':
+                if (playerY < worldHeight - speed1) {
+                    targetY = playerY + speed1;
+                    currentAnimation = 'movingDown';
+                }
+                break;
+            case 'left':
+                if (playerX > 0) {
+                    targetX = playerX - speed1;
+                    currentAnimation = 'movingLeft';
+                }
+                break;
+            case 'right':
+                if (playerX < worldWidth - speed1) {
+                    targetX = playerX + speed1;
+                    currentAnimation = 'movingRight';
+                }
+                break;
+                case 'click':
+                    targetX = (p_x-25)/gridSize;
+                    targetY = (p_y-30)/gridSize;
+                    currentAnimation = 'movingDown';
+                break;
+        }
+        
+        // console.log("Current Animation:", currentAnimation); // Print current animation to console
+    }
+
+    function updatePosition() {
+        const dx = targetX - playerX;
+        const dy = targetY - playerY;
+        if(dx == 0 || dy == 0) {
+                if (Math.abs(dx) > speed) {
+                playerX += dx > 0 ? speed : -speed;
+            } else {
+                playerX = targetX;
+            }
+            if (Math.abs(dy) > speed) {
+                playerY += dy > 0 ? speed : -speed;
+            } else {
+                playerY = targetY;
+            }
+        } else {
+            if(Math.hypot(dx,dy) < speed) {
+                playerX = targetX;
+                playerY = targetY;
+            } else {
+                const deltaX = dx > dy ? dx/(10.*Math.abs(dy)) : dx/(10.*Math.abs(dx));
+                const deltaY = dx > dy ? dy/(10.*Math.abs(dy)) : dy/(10.*Math.abs(dx));
+                playerX += Math.abs(dx) < Math.abs(dy) ? dx/(10.*Math.abs(dy)) : dx/(10.*Math.abs(dx));
+                playerY += Math.abs(dx) < Math.abs(dy) ? dy/(10.*Math.abs(dy)) : dy/(10.*Math.abs(dx));
+                console.log
+            }
+        }
+
+
+		if(playerX == targetX && playerY == targetY) {
+			currentAnimation = 'standing';
+		}
+		//console.log("pos: (" + playerX*gridSize +", " + playerY*gridSize + ")");
+    }
+
+    function checkTeleportation() {
+        // Check if the player is in contact with any teleportation platform
+        const telepodWidth = 50; // Adjust size if needed
+        const telepodHeight = 50; // Adjust size if needed
+        const numTelepods = 3;
+        const telepodSpacing = canvas.width / (numTelepods + 1);
+
+		// console.log("p: " + playerX*gridSize +", " + playerY*gridSize);
+        for (let i = 1; i <= numTelepods; i++) {
+            const telepodX = i * telepodSpacing - telepodWidth / 2;
+            const telepodY = canvas.height - telepodHeight;
+
+			// console.log("t " + i + ": " + telepodX +", " + (telepodY-20));
+
+            if (playerX*gridSize >= telepodX-20-10 && playerX*gridSize <= telepodX + telepodWidth-20 && playerY*gridSize >= telepodY-20-20 && playerY*gridSize <= telepodY + telepodHeight - 20) {
+                if(i == 1) 	worldState = i;
+                if(i == 2 && world_clears[0] >= 1) worldState = i;
+                if(i == 3 && world_clears[0] >= 1 && world_clears[1] >= 1) {
+                    worldState = i;
+                    window.location.href = "file:///C:/Users/badip/Downloads/love/index.html";
+                } 
+                // Teleport the player to a different world
+                // Add your teleportation logic here
+                console.log('Teleporting to world ' + i);
+                // Reset player position
+                playerX = Math.floor(worldWidth / 2);
+                playerY = Math.floor(worldHeight / 2);
+                targetX = Math.floor(worldWidth / 2);
+                targetY = Math.floor(worldHeight / 2);
+                break;
+            }
+        }
+    }
+
+    function checkQuestion() {
+        choice = 'c0';
+		if (playerX*gridSize >= 55 +(canvas.width/2 - 600 / 2)  && playerX*gridSize <= 277 + (canvas.width/2 - 600 / 2) && playerY*gridSize >= 60 + 400/4 && playerY*gridSize <= 177 + 400/4) {
+			console.log("c1");
+            choice = 'c1';
+		}
+
+		if (playerX*gridSize >= 55 +(canvas.width/2 - 600 / 2)  && playerX*gridSize <= 277 + (canvas.width/2 - 600 / 2) && playerY*gridSize >= 224 + 400/4 && playerY*gridSize <= 342 + 400/4) {
+			console.log("c2");
+            choice = 'c2';
+		}
+
+        if (playerX*gridSize >= 314 +(canvas.width/2 - 600 / 2)  && playerX*gridSize <= 543 + (canvas.width/2 - 600 / 2) && playerY*gridSize >= 60 + 400/4 && playerY*gridSize <= 177 + 400/4) {
+			console.log("c3");
+            choice = 'c3';
+		}
+
+		if (playerX*gridSize >= 314 +(canvas.width/2 - 600 / 2)  && playerX*gridSize <= 543 + (canvas.width/2 - 600 / 2) && playerY*gridSize >= 224 + 400/4 && playerY*gridSize <= 342 + 400/4) {
+			console.log("c4");
+            choice = 'c4';
+		}
+	}
+
+    function choiceSelected(choice) {
+
+        switch (choice) {
+            case 'c1':
+                numHearts-=1;
+                break;
+            case 'c2':
+            numHearts-=1;
+                break;
+            case 'c3':
+            numHearts=4;
+                break;
+            case 'c4':
+            numHearts-=1;
+                break;
+            case 'c0':
+                break;
+        }
+        if(numHearts == 4) {
+            worldState = 0;
+            console.log("check" + worldState);
+            world_clears[0] += 1;
+            alert("world 1 cleared YIPPEEEE");
+            playerX = Math.floor(worldWidth / 2);
+            playerY = Math.floor(worldHeight / 2);
+            targetX = Math.floor(worldWidth / 2);
+            targetY = Math.floor(worldHeight / 2);
+            
+        }
+        if(numHearts <= 0) {
+            setTimeout(() => { died(1); }, 2000);
+            alert("u ded :(");
+            numHearts = 3;
+        }
+    }
+
+    function died(world) {
+        worldState = 0;
+        console.log("check" + worldState);
+        world_clears[world-1] = 0;
+        playerX = Math.floor(worldWidth / 2);
+        playerY = Math.floor(worldHeight / 2);
+        targetX = Math.floor(worldWidth / 2);
+        targetY = Math.floor(worldHeight / 2);
+    }
+
+    function gameLoop() {
+        clearCanvas();
+        // console.log(world_clears);
+		if(worldState == 1) {
+			ctx.font = '36px Minecraft';
+			ctx.fillStyle = 'red';
+			ctx.textAlign = 'center';
+            switch(numHearts) {
+                case 4:
+                    ctx.fillText('YIPPEEEEEEEEE', canvas.width / 2, 90);
+                    break;
+                case 3:
+                    ctx.fillText('Answer the question! (go on top and hit enter)', canvas.width / 2, 90);
+                    break;
+                case 2:
+                    ctx.fillText('Answer the question???? (go on top and hit enter)', canvas.width / 2, 90);
+                    break;
+                case 1:
+                    ctx.fillText('Answer the question..... (go on top and hit enter)', canvas.width / 2, 90);
+                    break;
+                default:
+                    ctx.fillText(':(((((', canvas.width / 2, 90);
+                    break;
+            }
+			drawQuestions();
+			checkQuestion();
+		}
+		if(worldState == 0) {
+			ctx.font = '36px Minecraft';
+			ctx.fillStyle = 'red';
+			ctx.textAlign = 'center';
+			ctx.fillText('BOOOOOOOOOOOOOOO!! (WASD movement or click to go to point)', canvas.width / 2, 90);
+			drawTelepods(); // Draw teleportation platforms
+			checkTeleportation(); // Check for teleportation
+		}
+
+		if(worldState == 2) {
+            drawMaze();
+		}
+		if(worldState == 3) {
+
+		}
+
+        updatePosition();
+        drawPlayer();
+        requestAnimationFrame(gameLoop);
+    }
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // Wait for the player images to load before starting the game loop
+    let loadedImages = 0;
+    for (let img in playerImages) {
+        playerImages[img].onload = function() {
+            loadedImages++;
+            if (loadedImages === Object.keys(playerImages).length) {
+                gameLoop();
+            }
+        }
+    }
+
+    document.addEventListener('keydown', function(event) {
+        const key = event.key.toLowerCase();
+
+        if(worldState == 2) {
+            switch (key) {
+                case 'w':
+                case 'arrowup':
+                    mazeMove('up');
+                    break;
+                case 'a':
+                case 'arrowleft':
+                mazeMove('left');
+                    break;
+                case 's':
+                case 'arrowdown':
+                mazeMove('down');
+                    break;
+                case 'd':
+                case 'arrowright':
+                mazeMove('right');
+                    break;
+            }
+        } else {
+            maze_pos[0] = 1;
+            maze_pos[1] = 1;
+            switch (key) {
+                case 'w':
+                case 'arrowup':
+                    movePlayer('up',0,0);
+                    break;
+                case 'a':
+                case 'arrowleft':
+                    movePlayer('left',0,0);
+                    break;
+                case 's':
+                case 'arrowdown':
+                    movePlayer('down',0,0);
+                    break;
+                case 'd':
+                case 'arrowright':
+                    movePlayer('right',0,0);
+                    break;
+                case 'enter':
+                    choiceSelected(choice);
+                    break;
+            }
+        }
+
+    });
+
+    document.addEventListener('click', function(event) {
+        console.log("x: " + event.clientX + "y: " + event.clientY);
+        movePlayer('click',event.clientX,event.clientY);
+    });
+
+    document.addEventListener('keypress', function(event) {
+        if(event.shiftKey) {
+            speed1 = (window.innerWidth + window.innerHeight) / 100 / 1100;
+        } else {
+            speed1 = (window.innerWidth + window.innerHeight) / 2 / 1100;
+        }
+        console.log(event.shiftKey);
+    });
+    
+</script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Love Expression</title>
+	<link rel="stylesheet" href="style.css">
+	<style>
+		.container {
+			position: relative;
+		}
+		#no {
+			position: absolute;
+		}
+		#yes {
+			position: absolute;
+			left: 55%; /* Adjusted to widen the gap */
+			transform: translateX(-50%);
+		}
+		.love {
+			position: relative;
+			text-align: center;
+		}
+		.tenor-gif-embed {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<div class="love">
+			<div class="tenor-gif-embed" data-postid="26398063" data-share-method="host" data-aspect-ratio="1.42222" data-width="20%"><a href="https://tenor.com/view/angry-cat-smol-small-ragey-gif-26398063">Angry Cat GIF</a>from <a href="https://tenor.com/search/angry-gifs">Angry GIFs</a></div> <script type="text/javascript" async src="https://tenor.com/embed.js"></script>
+			<h2>80 <span>more</span> years?</h2>
+			<a id="no" href="#">na</a>
+			<a id="yes" href="yes.html">ya</a>
+		</div>
+	</div>
+	<script src="app.js"></script>
+	<script>
+		var noButton = document.getElementById('no');
+		var container = document.querySelector('.container');
+		var clicks = 0;
+
+		noButton.addEventListener('click', function(event) {
+			event.preventDefault();
+			if (clicks < 10) {
+				var containerWidth = container.offsetWidth;
+				var containerHeight = container.offsetHeight;
+				var randomX, randomY;
+
+				do {
+					randomX = Math.floor(Math.random() * (containerWidth - noButton.offsetWidth));
+					randomY = Math.floor(Math.random() * (containerHeight - noButton.offsetHeight));
+				} while (isOverlapping(randomX, randomY));
+
+				noButton.style.left = randomX + 'px';
+				noButton.style.top = randomY + 'px';
+
+				clicks++;
+			} else {
+				window.location.href = "no.html";
+			}
+		});
+
+		function isOverlapping(x, y) {
+			var yesButton = document.getElementById('yes');
+			var noButtonRect = noButton.getBoundingClientRect();
+			var yesButtonRect = yesButton.getBoundingClientRect();
+
+			return !(noButtonRect.right < x ||
+			         noButtonRect.left > x + noButton.offsetWidth ||
+			         noButtonRect.bottom < y ||
+			         noButtonRect.top > y + noButton.offsetHeight ||
+			         yesButtonRect.right < x ||
+			         yesButtonRect.left > x + noButton.offsetWidth ||
+			         yesButtonRect.bottom < y ||
+			         yesButtonRect.top > y + noButton.offsetHeight);
+		}
+	</script>
+</body>
+</html>
